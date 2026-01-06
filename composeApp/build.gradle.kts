@@ -91,9 +91,11 @@ android {
     }
 
     applicationVariants.all {
+        val variantName = name
         outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "Celestite-${versionName}-${name}.apk"
+            // 注意：这里强制转换为 ApkVariantOutput 而非 BaseVariantOutputImpl
+            val output = this as com.android.build.gradle.api.ApkVariantOutput
+            outputFileName = "Celestite-${versionName}-${variantName}.apk"
         }
     }
 
@@ -105,7 +107,8 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false  // 开启混淆和代码缩减
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
 //            isShrinkResources = true // 移除无用的资源文件（需配合混淆使用）
 //            proguardFiles(
 //                getDefaultProguardFile("proguard-android-optimize.txt"),

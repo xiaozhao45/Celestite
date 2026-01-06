@@ -22,7 +22,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Celestite",
         icon = painterResource("app_icon.png"),
-        state = WindowState(size = DpSize(1000.dp, 600.dp)) // 设置初始大小为 1000x600
+        state = WindowState(size = DpSize(1000.dp, 700.dp)) // 设置初始大小为 1000x700
     ) {
         App()
     }

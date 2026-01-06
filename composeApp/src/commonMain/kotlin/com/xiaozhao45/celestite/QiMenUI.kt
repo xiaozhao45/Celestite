@@ -6,15 +6,19 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +26,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +63,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.xiaozhao45.celestite.Components.InfoTag
+import com.xiaozhao45.celestite.Components.PillarItem
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -263,6 +273,7 @@ fun PalaceFunctionDialog(
  * 九宫格盘面
  * 增加了 Canvas 绘制连接线和点击逻辑，以及长按/特殊点击逻辑
  */
+@Suppress("UnusedBoxWithConstraintsScope")
 @Composable
 fun QiMenGrid(
     palaces: List<PalaceData>,
@@ -274,19 +285,22 @@ fun QiMenGrid(
     // 确保数据不为空
     if (palaces.size < 9) return
 
+    // MD3 样式变量
     val outerCornerRadius = 16.dp
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
     val dividerColor = MaterialTheme.colorScheme.outlineVariant
     val highlightColor = MaterialTheme.colorScheme.primary
 
     // 动画：虚线流动相位
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "DashAnimation")
     val dashPhase by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 40f, // 2 * (dashOn + dashOff)
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
-        )
+        ),
+        label = "DashPhase"
     )
 
     // 计算关联宫位 (先天 -> 当前 -> 后天)
@@ -299,11 +313,8 @@ fun QiMenGrid(
         modifier = modifier
             .aspectRatio(1f)
             .background(dividerColor, RoundedCornerShape(outerCornerRadius))
-            .padding(2.dp)
+            .padding(2.dp) // 模拟分割线宽
     ) {
-        val width = maxWidth
-        val height = maxHeight
-
         // 绘制底层宫位
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -338,10 +349,6 @@ fun QiMenGrid(
 
                 // 辅助函数：获取指定 Index 的中心坐标
                 fun getCenterOfIndex(idx: Int): Offset {
-                    // 映射关系:
-                    // Row 0: 3, 8, 1  -> (0,0), (0,1), (0,2)
-                    // Row 1: 2, 4, 6  -> (1,0), (1,1), (1,2)
-                    // Row 2: 7, 0, 5  -> (2,0), (2,1), (2,2)
                     val (row, col) = when (idx) {
                         3 -> 0 to 0
                         8 -> 0 to 1
@@ -435,7 +442,7 @@ fun QiMenGrid(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun androidx.compose.foundation.layout.RowScope.GridCellWrapper(
+fun RowScope.GridCellWrapper(
     data: PalaceData,
     index: Int,
     selectedIdx: Int,
@@ -480,7 +487,7 @@ fun androidx.compose.foundation.layout.RowScope.GridCellWrapper(
                     }
                 }
             )
-            .alpha(if (isDimmed) 0.3f else 1f), // 未选中则变暗
+            .alpha(if (isDimmed) 0.38f else 1f), // MD3 推荐禁用/变暗态 Alpha 为 0.38
         shape = shape,
         isHighlighted = isHighlighted
     )
@@ -497,26 +504,40 @@ fun QiMenCell(
     shape: androidx.compose.ui.graphics.Shape,
     isHighlighted: Boolean = false
 ) {
+    // 根据高亮状态决定颜色
+    val backgroundColor = if (isHighlighted) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val contentColor = MaterialTheme.colorScheme.onSurface
+
+    // 边框逻辑
+    val borderStroke = if (isHighlighted) {
+        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        null
+    }
+
     Surface(
         modifier = modifier
             .fillMaxSize()
             .clip(shape),
-        color = if (isHighlighted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        border = if (isHighlighted) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        color = backgroundColor,
+        contentColor = contentColor,
+        border = borderStroke
     ) {
         if (data.isCenter) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
                     text = UserPreferences.qimenMiddlePalaceText,
-
-
                     textAlign = TextAlign.Center,
-
-                    modifier = Modifier.align(Alignment.Center),
-
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
         } else {
@@ -537,8 +558,9 @@ fun QiMenCell(
                     }
                     Text(
                         text = data.god,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Box(modifier = Modifier.size(12.dp)) {
                         if (data.isVoid) VoidIcon(Modifier.fillMaxSize())
@@ -552,7 +574,10 @@ fun QiMenCell(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 左侧：天盘寄干
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
                         if (data.hiddenHeavenStem != null) {
                             Text(
                                 text = data.hiddenHeavenStem,
@@ -566,17 +591,15 @@ fun QiMenCell(
                         modifier = Modifier.weight(1.5f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 九星是连接线的锚点
                         Text(
                             text = data.star,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = if (isHighlighted) FontWeight.ExtraBold else FontWeight.Normal,
+                            fontWeight = if (isHighlighted) FontWeight.ExtraBold else FontWeight.Medium,
                             color = if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = data.starStatus,
                             style = MaterialTheme.typography.labelSmall,
-                            fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }
@@ -585,11 +608,13 @@ fun QiMenCell(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = data.heavenStem, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = data.heavenStem,
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         Text(
                             text = data.heavenStage,
                             style = MaterialTheme.typography.labelSmall,
-                            fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -602,7 +627,10 @@ fun QiMenCell(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 左侧：地盘寄干
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
                         if (data.hiddenEarthStem != null) {
                             Text(
                                 text = data.hiddenEarthStem,
@@ -619,6 +647,7 @@ fun QiMenCell(
                         Text(
                             text = data.door,
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                     // 右侧：地盘干 + 长生
@@ -626,11 +655,13 @@ fun QiMenCell(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = data.earthStem, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = data.earthStem,
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         Text(
                             text = data.earthStage,
                             style = MaterialTheme.typography.labelSmall,
-                            fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -668,125 +699,107 @@ fun getRelatedPalaceIndices(currentIndex: Int): Triple<Int, Int, Int> {
 
 /**
  * 奇门遁甲信息面板
+ * 风格统一化：参照 SiZhuInfoCard 的紧凑 M3 风格
  */
 @Composable
 fun QiMenInfoPanel(data: QiMenData, onNewClick: () -> Unit) {
-    // 1. 卡片整体可点击
     Card(
-        onClick = onNewClick, // 点击整个卡片触发新建/弹窗
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardDefaults.shape)
+            .clickable(onClick = onNewClick) // 保持原有点击逻辑
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp) // 调小间距更紧凑
         ) {
-            // --- 第一部分：时间信息 ---
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            // --- 头部：时间与局数 ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = data.timeString,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(8.dp)
+                    Text(
+                        text = "${data.lunarDate} • ${data.solarTerm}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                // 仿照 Edit 按钮样式的局数徽章
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 使用 Icon 增加视觉丰富度 (可选，这里用 AutoMode 或类似的图标)
+                        Icon(
+                            imageVector = Icons.Default.Info, // 或者是您项目中的 YinYang 图标
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = data.juShu,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
-                Text(
-                    text = "${data.lunarDate}  ${data.solarTerm}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            // --- 第二部分：四柱干支 ---
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    PillarItem(label = "年柱", value = data.yearPillar)
-                    PillarItem(label = "月柱", value = data.monthPillar)
-                    PillarItem(label = "日柱", value = data.dayPillar)
-                    PillarItem(label = "时柱", value = data.hourPillar)
-                }
-            }
-
-            // --- 第三部分：核心参数 ---
-            Column(
+            // --- 中部：四柱干支 ---
+            // 移除原本的 Surface 包装，直接展示以保持一致性
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // 第一行：值符、值使
+                // 使用统一的 PillarItem 组件 (下方定义)
+                PillarItem(label = "年柱", value = data.yearPillar, modifier = Modifier.weight(1f))
+                PillarItem(label = "月柱", value = data.monthPillar, modifier = Modifier.weight(1f))
+                PillarItem(label = "日柱", value = data.dayPillar, modifier = Modifier.weight(1f))
+                PillarItem(label = "时柱", value = data.hourPillar, modifier = Modifier.weight(1f))
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // --- 底部：核心参数 (值符、值使等) ---
+            // 改为紧凑的两行布局，类似 SiZhuInfoCard 的底部 InfoTag
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    BigInfoItem(label = "值符星", value = data.valueStar, modifier = Modifier.weight(1f))
-                    VerticalDivider(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .align(Alignment.CenterVertically),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    BigInfoItem(label = "值使门", value = data.valueDoor, modifier = Modifier.weight(1f))
+                    InfoTag(label = "值符", value = data.valueStar, modifier = Modifier.weight(1f))
+                    InfoTag(label = "值使", value = data.valueDoor, modifier = Modifier.weight(1f))
                 }
-
-                // 第二行：月将、月令
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    BigInfoItem(label = "月将", value = data.monthGeneral, modifier = Modifier.weight(1f))
-                    VerticalDivider(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .align(Alignment.CenterVertically),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    BigInfoItem(label = "月令", value = data.monthCommand, modifier = Modifier.weight(1f))
+                    InfoTag(label = "月将", value = data.monthGeneral, modifier = Modifier.weight(1f))
+                    InfoTag(label = "月令", value = data.monthCommand, modifier = Modifier.weight(1f))
                 }
-            }
-
-            // --- 第四部分：提示 ---
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "直接点击此卡片以新建排盘",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }
 }
-
 

@@ -51,7 +51,7 @@ kotlin {
                 implementation("cafe.adriel.voyager:voyager-tab-navigator:1.0.1")
 
                 // 本地模块
-                implementation(projects.shared)
+                //implementation(projects.shared)
                 implementation(project(":xuan-utils-pro"))
             }
         }
@@ -133,7 +133,7 @@ compose.desktop {
     application {
         mainClass = "com.xiaozhao45.celestite.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg,TargetFormat.Exe,TargetFormat.AppImage,TargetFormat.Rpm, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg,TargetFormat.Exe,TargetFormat.AppImage,TargetFormat.Rpm, TargetFormat.Pkg,TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Celestite"
             packageVersion = "1.0.0"
             modules("java.instrument", "java.prefs", "java.sql", "jdk.unsupported")
@@ -149,19 +149,15 @@ compose.desktop {
                 vendor = "xiaozhao45"
                 // 固定的升级 UUID，保证以后安装新版本能覆盖旧版本而不是安装两个
                 upgradeUuid = "D9BEDF7F-ED81-69CE-371A-0E7B5CFA9198"
-
+                iconFile.set(project.file("src/jvmMain/resources/icon.ico"))
             }
             macOS {
                 // 指向你的 .icns 文件路径
-                iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
-            }
-            windows {
-                // 指向你的 .ico 文件路径
-                iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
+                iconFile.set(project.file("src/jvmMain/resources/icon.icns"))
             }
             linux {
                 // 指向你的 .png 文件路径
-                iconFile.set(project.file("src/desktopMain/resources/app_icon.png"))
+                iconFile.set(project.file("src/jvmMain/resources/app_icon.png"))
             }
 
         }

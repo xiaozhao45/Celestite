@@ -18,7 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.xiaozhao45.celestite.Components.InfoTag
+import com.xiaozhao45.celestite.Components.PillarItem
 import kotlinx.coroutines.delay
 import xuan.core.daliuren.DaLiuRen
 import xuan.core.daliuren.settings.DaLiuRenJiChuSetting
@@ -71,7 +74,7 @@ fun LiuRenPage() {
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+//        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     ) { paddingValues ->
 
         BoxWithConstraints(
@@ -143,28 +146,31 @@ fun LiuRenPage() {
 
 
 }
-
 /**
  * 四柱八字展示区
+ * 保持原有紧凑风格，统一颜色 Token
  */
 @Composable
 fun SiZhuInfoCard(data: DaLiuRen, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clip(CardDefaults.shape)
             .clickable(onClick = onClick)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            // 头部时间
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp) // 统一间距
+        ) {
+            // --- 头部：时间与操作 ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = "公历 ${data.solarStr}",
                         style = MaterialTheme.typography.titleMedium,
@@ -203,34 +209,36 @@ fun SiZhuInfoCard(data: DaLiuRen, onClick: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // 四柱
+            // --- 中部：四柱详情 ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SiZhuColumn("年柱", data.yearGanZhi, data.yearGanZhiKongWang, Modifier.weight(1f))
-                SiZhuColumn("月柱", data.monthGanZhi, data.monthGanZhiKongWang, Modifier.weight(1f))
-                SiZhuColumn("日柱", data.dayGanZhi, data.dayGanZhiKongWang, Modifier.weight(1f))
-                SiZhuColumn("时柱", data.hourGanZhi, data.hourGanZhiKongWang, Modifier.weight(1f))
+//                SiZhuColumn("年柱", data.yearGanZhi, data.yearGanZhiKongWang, Modifier.weight(1f))
+//                SiZhuColumn("月柱", data.monthGanZhi, data.monthGanZhiKongWang, Modifier.weight(1f))
+//                SiZhuColumn("日柱", data.dayGanZhi, data.dayGanZhiKongWang, Modifier.weight(1f))
+//                SiZhuColumn("时柱", data.hourGanZhi, data.hourGanZhiKongWang, Modifier.weight(1f))
+                PillarItem(label = "年柱", value = data.yearGanZhi, modifier = Modifier.weight(1f))
+                PillarItem(label = "月柱", value = data.monthGanZhi, modifier = Modifier.weight(1f))
+                PillarItem(label = "日柱", value = data.dayGanZhi, modifier = Modifier.weight(1f))
+                PillarItem(label = "时柱", value = data.hourGanZhi, modifier = Modifier.weight(1f))
+
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // 底部标签
+            // --- 底部：神煞标签 ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                InfoTag("月将", "${data.yueJiang} ${data.yueJiangShen}")
-                InfoTag("占时", "${data.hourZhi}时")
-                InfoTag("旬空", data.dayGanZhiKongWang)
+                // 使用 weight 确保分布均匀，或者根据内容自适应
+                InfoTag("月将", "${data.yueJiang} ${data.yueJiangShen}", Modifier.weight(1f))
+                InfoTag("占时", "${data.hourZhi}时", Modifier.weight(1f))
+                InfoTag("旬空", data.dayGanZhiKongWang, Modifier.weight(1f))
             }
         }
     }
@@ -292,12 +300,6 @@ fun InfoTag(label: String, value: String) {
     }
 }
 
-/**
- * 核心式盘布局
- *
- * 修正了索引逻辑以匹配 SHI_ER_GONG_DI_ZHI = [寅, 卯, 辰, 巳, 午, 未, 申, 酉, 戌, 亥, 子, 丑]
- * 0=寅, 1=卯, 2=辰, 3=巳, 4=午, 5=未, 6=申, 7=酉, 8=戌, 9=亥, 10=子, 11=丑
- */
 @Composable
 fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
     val spacing = 4.dp
@@ -306,21 +308,14 @@ fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
     // 配置区域
     // ==========================================
     // 中间宫位（卯辰酉戌）的拉伸倍率
-    // 1.0f = 正方形 (默认)
-    // 1.3f = 高度是宽度的 1.3 倍 (推荐)
-    // 1.5f = 更修长
     val middleElongation = UserPreferences.liurenHighScale
 
     // 计算总权重和容器比例
-    // 上下行权重各为 1 (对应高度1)，中间行权重为 2 * 倍率 (对应高度 2*X)
     val topBottomWeight = 1f
     val middleRowWeight = middleElongation * 2
-
-    // 总高度份数 = 1 + (X*2) + 1
     val totalHeightUnits = topBottomWeight + middleRowWeight + topBottomWeight
 
     // 动态计算宽高比：宽度固定4份 / 高度动态份数
-    // 这样能保证上下行恰好是正方形
     val discAspectRatio = 4f / totalHeightUnits
 
     fun getCell(idx: Int): GridCellData {
@@ -334,18 +329,18 @@ fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        //color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
         shape = RoundedCornerShape(24.dp),
-        tonalElevation = 4.dp,
-        // 【关键修改】：不再是固定的 1f，而是根据拉伸倍率计算出的比例
-        modifier = modifier.aspectRatio(discAspectRatio)
+        tonalElevation = 4.dp, // MD3 推荐高度
+        modifier = modifier.aspectRatio(discAspectRatio),
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(spacing)
         ) {
             // --- 第一行 (南) ---
-            // 权重设为 1，代表标准正方形高度
             Row(
                 modifier = Modifier.weight(topBottomWeight),
                 horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -356,7 +351,6 @@ fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
             }
 
             // --- 中间行 ---
-            // 权重设为 2 * 倍率，拉伸高度
             Row(
                 modifier = Modifier.weight(middleRowWeight),
                 horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -373,7 +367,7 @@ fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
                 // 中间大区域
                 Surface(
                     modifier = Modifier.weight(2f).fillMaxHeight(),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     CenterPanel(data)
@@ -390,7 +384,6 @@ fun LiurenDiscLayout(data: DaLiuRen, modifier: Modifier = Modifier) {
             }
 
             // --- 底部行 (北) ---
-            // 权重设为 1，保持正方形
             Row(
                 modifier = Modifier.weight(topBottomWeight),
                 horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -513,7 +506,9 @@ fun GongWeiCell(
                 // 2. 更新点击时间，触发 LaunchedEffect 重置计时
                 lastClickTime = System.currentTimeMillis()
             },
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        //color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         shape = RoundedCornerShape(8.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize().padding(6.dp)) {
@@ -541,7 +536,7 @@ fun GongWeiCell(
             Text(
                 text = data.tianPan,
                 style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Black,
+                //fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.align(Alignment.BottomEnd)
             )
@@ -583,9 +578,10 @@ fun GongWeiCell(
 @Composable
 fun CenterPanel(data: DaLiuRen) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(8.dp),
+        modifier = Modifier.fillMaxSize().padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 三传区域
         Column(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceEvenly
@@ -604,9 +600,10 @@ fun CenterPanel(data: DaLiuRen) {
 
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         )
 
+        // 四课区域
         Row(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -630,11 +627,26 @@ fun SanChuanRow(label: String, zhi: String, gan: String, shen: String, liuQin: S
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(liuQin, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.width(42.dp))
-        Text(gan, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        // 六亲
+        Text(
+            text = liuQin,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.width(48.dp),
+            textAlign = TextAlign.Start
+        )
+        // 遁干
+        Text(
+            text = gan,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+
+        // 地支 (高亮 Chip)
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
-            shape = RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             Text(
@@ -642,26 +654,47 @@ fun SanChuanRow(label: String, zhi: String, gan: String, shen: String, liuQin: S
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
         }
-        Text(shen, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
+
+        // 神将
+        Text(
+            text = shen,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.tertiary
+        )
     }
 }
-
 @Composable
 fun SiKeColumn(shen: String, tian: String, di: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(shen, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.tertiary)
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(tian, style = MaterialTheme.typography.titleLarge,  color = MaterialTheme.colorScheme.onSurface)
-        Text(di, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // 神将
+        Text(
+            text = shen,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.tertiary,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        // 天盘
+        Text(
+            text = tian,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            //fontWeight = FontWeight.Bold
+        )
+        // 地盘
+        Text(
+            text = di,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
-
 /**
  * 底部补充信息
  */

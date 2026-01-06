@@ -62,8 +62,7 @@ fun App() {
             LocalThemeConfig provides ThemeConfigActions(refresh = refreshTheme)
         ) {
             TabNavigator(QiMenTab) {
-                // 1. 【关键修复】将 content 的定义移到 BoxWithConstraints 外面
-                // 这样无论窗口怎么变，这个 content 实例永远是同一个，状态永远不会丢
+
                 val tabContent = remember {
                     movableContentOf { paddingValues: PaddingValues ->
                         Box(modifier = Modifier.padding(paddingValues)) {

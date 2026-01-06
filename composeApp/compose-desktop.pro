@@ -11,5 +11,12 @@
 # 保持 Settings 库
 -keep class com.russhwolf.settings.** { *; }
 
+-dontoptimize
+-dontobfuscate
+-dontwarn androidx.compose.**
+-keepattributes *Annotation*,Signature,InnerClasses
+-keep class androidx.compose.** { *; }
+-keep class kotlin.jvm.functions.** { *; }
+
 # 忽略混淆时的警告
 -dontwarn **

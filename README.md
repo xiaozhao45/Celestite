@@ -1,95 +1,88 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM), Server.
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+# Celestite (天青石)
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7f52ff.svg?logo=kotlin)
+![Compose Multiplatform](https://img.shields.io/badge/Compose_Multiplatform-1.9.1-4285F4.svg?logo=jetpack-compose)
+![Platform](https://img.shields.io/badge/Platform-Android_%7C_JVM_(Desktop)-brightgreen.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+**Celestite** 是一款基于 **Kotlin Multiplatform (KMP)** 开发的现代化中华术数排盘软件。
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+本项目旨在利用现代化的 **Material 3** 设计语言和 **Compose** 声明式 UI，为传统术数（奇门遁甲、大六壬等）赋予优雅的视觉体验和交互逻辑。
 
-### Build and Run Android Application
+> [!warning]
+> 本项目目前专注于 Android 和 Desktop (JVM) 平台，暂无 iOS 支持计划。
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+## ✨ 特色功能 (Features)
 
-### Build and Run Desktop (JVM) Application
+*   **🎨 极致的 Material Design 3**
+    *   完全遵循 M3 设计规范，支持动态取色 (Dynamic Color/Monet)。
+    *   内置多种高雅主题配色，支持深色模式 (Dark Mode) 自动切换。
+    *   **响应式布局**：根据屏幕宽度自动在底部导航栏 (BottomBar) 和侧边导航轨 (Navigation Rail) 之间切换，完美适配手机与桌面端。
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+*   **🔮 专业排盘**
+    *   **奇门遁甲**：支持拆补法、置闰法，盘面清晰直观。
+    *   **大六壬**：提供详细的三传四课与神煞信息。
+    *   **交互式解盘**：点击宫位即可查看先后天，长按/Shift点击可查看解析。
 
-### Build and Run Server
+*   **🎵 视听通感 (Synesthesia)**
+    *   **可听的盘面**：支持点击宫位演奏音律。
+    *   **五音对应**：内置“中国传统五声调式”与“C大调”映射，根据宫位索引触发不同频率，让排盘不仅可见，亦可听。
 
-To build and run the development version of the server, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :server:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :server:run
-  ```
+*   **🛠️ 高度自定义**
+    *   支持自由调节盘面缩放比例、文字大小。
+    *   可配置动画速率、虚线特效、选中高亮等视觉反馈。
 
-### Build and Run Web Application
+## 📸 预览 (Screenshots)
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
-- for the Wasm target (faster, modern browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-- for the JS target (slower, supports older browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-    ```
+| 首页与时间选择 | 奇门遁甲排盘 | 大六壬排盘 |
+| :---: | :---: | :---: |
+| <img src="docs/images/home.png" width="300"/> | <img src="docs/images/qimen.png" width="300"/> | <img src="docs/images/liuren.png" width="300"/> |
 
-### Build and Run iOS Application
+| 个性化设置 | 主题与外观 |
+| :---: | :---: |
+| <img src="docs/images/settings_pref.png" width="300"/> | <img src="docs/images/settings_theme.png" width="300"/> |
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## 🛠 技术栈 (Tech Stack)
+
+本项目采用纯 Kotlin 开发，利用 KMP 实现代码共享。
+
+*   **Core**: [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)
+*   **UI Framework**: [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) (Material 3)
+*   **Navigation**: [Voyager](https://github.com/adrielcafe/voyager) (TabNavigator, Transitions)
+*   **Settings**: [Multiplatform Settings](https://github.com/russhwolf/multiplatform-settings)
+*   **Network**: [Ktor](https://ktor.io/)
+*   **Logging**: [Logback](https://logback.qos.ch/) / SLF4J
+
+### 核心算法库：xuan-utils-pro (Modified)
+
+本项目的术数运算核心逻辑源自开源项目 [xuan-utils-pro](https://gitee.com/shan-dai/xuan-utils-pro)。
+为了适应 KMP 架构与现代化构建需求，Celestite 对其进行了深度定制与重构：
+
+1.  **构建迁移**：从 Maven 迁移至 Gradle (Kotlin DSL)，完全融入 KMP 生态。
+2.  **代码净化**：移除了原项目中无法正常使用的 WebUI 代码和依赖，仅保留核心算法。
+3.  **功能增强**：在原有基础上新增了 **置闰法** (Intercalation) 的算法支持。
+
+## 🚀 快速开始 (Getting Started)
+
+### 环境要求
+*   JDK 17+
+*   Android Studio (Ladybug 或更新版本) 或 IntelliJ IDEA
+
+### 运行 Android
+```bash
+./gradlew :composeApp:installDebug
+```
+
+### 运行 Desktop (JVM)
+```bash
+./gradlew :composeApp:run
+```
+
+## 🤝 贡献与致谢
+
+*   感谢 [shan-dai](https://gitee.com/shan-dai) 提供的 `xuan-utils-pro` 算法基础。
+*   感谢 JetBrains 团队提供的 Compose Multiplatform 框架。
 
 ---
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
-
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+*Created with ❤️ by xiaozhao45*

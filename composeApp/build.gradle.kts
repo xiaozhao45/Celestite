@@ -90,6 +90,13 @@ android {
         versionName = "1.0"
     }
 
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "Celestite-${versionName}-${name}.apk"
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -98,7 +105,12 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = false  // 开启混淆和代码缩减
+//            isShrinkResources = true // 移除无用的资源文件（需配合混淆使用）
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android-optimize.txt"),
+//                "proguard-rules.pro"
+//            )
         }
     }
 
@@ -121,9 +133,45 @@ compose.desktop {
     application {
         mainClass = "com.xiaozhao45.celestite.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.xiaozhao45.celestite"
+            targetFormats(TargetFormat.Dmg,TargetFormat.Exe,TargetFormat.AppImage,TargetFormat.Rpm, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "Celestite"
             packageVersion = "1.0.0"
+            modules("java.instrument", "java.prefs", "java.sql", "jdk.unsupported")
+            vendor = "xiaozhao45"      // 作者/公司名
+            description = "这是一个基于 KMP 的术数排盘程序" // 鼠标悬停在安装包上的描述内容
+            copyright = "Open Source Software"
+            windows {
+                shortcut = true
+                menu = true
+                // 自定义描述信息
+                description = "Celestite - Material 3的术数排盘程序。"
+                // 自定义控制面板中的软件供应商名称
+                vendor = "xiaozhao45"
+                // 固定的升级 UUID，保证以后安装新版本能覆盖旧版本而不是安装两个
+                upgradeUuid = "D9BEDF7F-ED81-69CE-371A-0E7B5CFA9198"
+
+            }
+            macOS {
+                // 指向你的 .icns 文件路径
+                iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
+            }
+            windows {
+                // 指向你的 .ico 文件路径
+                iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
+            }
+            linux {
+                // 指向你的 .png 文件路径
+                iconFile.set(project.file("src/desktopMain/resources/app_icon.png"))
+            }
+
         }
+        buildTypes.release.proguard {
+            isEnabled.set(true)
+            optimize.set(true)
+            // 建议先加一个基础配置文件，防止打包后运行闪退
+            configurationFiles.from(project.file("compose-desktop.pro"))
+        }
+
+
     }
 }

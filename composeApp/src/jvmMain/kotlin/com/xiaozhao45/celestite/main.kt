@@ -1,6 +1,7 @@
 package com.xiaozhao45.celestite
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -20,6 +21,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "Celestite",
+        icon = painterResource("app_icon.png"),
         state = WindowState(size = DpSize(1000.dp, 600.dp)) // 设置初始大小为 1000x600
     ) {
         App()

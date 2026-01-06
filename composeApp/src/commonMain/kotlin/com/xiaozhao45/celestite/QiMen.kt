@@ -81,7 +81,12 @@ fun calculateQiMenData(dateTime: LocalDateTime): QiMenData {
     setting.date = dateTime.format(formatter)
     setting.dateType = 0
     setting.jieQiType = 1
-    setting.paiPanType = 3
+    setting.paiPanType = when(UserPreferences.qimenArrangement){
+        QimenArrangement.Day -> 2
+        QimenArrangement.Hour -> 3
+        QimenArrangement.Year -> 0
+        QimenArrangement.Month -> 1
+    }
     setting.zhiShiType = 0
     setting.yearGanZhiType = 2
     setting.monthGanZhiType = 1

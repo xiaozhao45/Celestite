@@ -205,7 +205,7 @@ object UserPreferences {
 
     // === 主题设置 ===
     // 默认开启动态取色 (Android 12+ Monet)
-    var useDynamicColor: Boolean by settings.boolean("app_dynamic_color", true)
+    var useDynamicColor: Boolean by settings.boolean("app_dynamic_color", false)
 
     // 自定义主题色 (当动态取色关闭，或在非 Android 平台时使用)
     // 默认存为 Int，这里默认用紫色
@@ -262,7 +262,7 @@ object UserPreferences {
     }
 
     fun resetToDefaults() {
-        // 奇门
+        // === 1. 重置奇门设置 ===
         qimenMiddlePalaceText = "无门无路"
         qimenPalaceSound = true
         qimenScale = QimenScale.Default
@@ -272,7 +272,7 @@ object UserPreferences {
         qimenZhiRun = true
         qimenUIScale = 1.0f
 
-        // 六壬
+        // === 2. 重置六壬设置 ===
         liurenEarthBranchDisplay = true
         liurenAnimationDuration = 6
         liurenFadeEffect = true
@@ -280,7 +280,13 @@ object UserPreferences {
         liurenUIScale = 1.0f
         liurenHighScale = 1.4f
 
-        // 重置气泡提示
+        // === 3. 重置主题设置 (原本漏掉的部分) ===
+        useDynamicColor = false
+        customThemeColor = 0xFF6750A4.toInt() // 默认紫色
+        themeMode = ThemeController.ThemeMode.SYSTEM
+
+        // === 4. 重置气泡提示 ===
+        // 直接调用已有的重置逻辑，避免代码重复
         resetAllTooltips()
     }
 }
@@ -410,22 +416,20 @@ fun SettingsPage(
                         description = "从设备壁纸中提取颜色作为应用主题（仅 Android 12+ 有效）。",
                         checked = useDynamicColor,
                         onCheckedChange = { newValue ->
-                            if (currentPlatform == PlatformType.ANDROID) {
-                                // Android 平台：正常设置值
-                                useDynamicColor = newValue
-                                UserPreferences.useDynamicColor = newValue
-                            } else {
-                                // 非 Android 平台：阻止值改变，并触发弹窗显示
-                                // 注意：这里不要设置 useDynamicColor = newValue，否则开关会看起来被打开了
-                                showPlatformErrorDialog = true
-                            }
+//                            if (getPlatform().equals(PlatformType.ANDROID)) {
+//                                useDynamicColor = newValue
+//                                UserPreferences.useDynamicColor = newValue
+//                            } else {
+//                                showPlatformErrorDialog = true
+//                            }
+                            useDynamicColor = newValue
+                            UserPreferences.useDynamicColor = newValue
+                            themeConfig.refresh()
                         }
                     )
                 }
-
-                // 只有当不使用动态颜色时，才显示调色板
-                // 或者你想让用户即使开了动态色也能选备用色，可以去掉 if
-                if (!useDynamicColor) {
+                //if (!UserPreferences.useDynamicColor)
+                if (true) {
                     item {
                         ColorPalettePreference(
                             selectedColorInt = themeColorInt,
@@ -639,6 +643,21 @@ fun SettingsPage(
     }
 
     AnimatedAlertDialogCenter(
+        visible = showPlatformErrorDialog,
+        onDismissRequest = { themeConfig.refresh() },
+        icon = { Icons.Filled.Error },
+        title = { Text("不支持的平台！") },
+        text = { Text("\"当前平台不支持跟随壁纸颜色！\"") },
+        confirmButton = {
+            Button(
+                onClick = {showPlatformErrorDialog = false},
+            ){
+                Text("关闭")
+            }
+        },
+    )
+
+    AnimatedAlertDialogCenter(
         visible = showResetDialog, // 传入状态
         onDismissRequest = { showResetDialog = false },
         icon = { Icon(Icons.Default.Info, contentDescription = null) },
@@ -668,9 +687,8 @@ fun SettingsPage(
                     liurenScale = UserPreferences.liurenScale
                     liurenUiScale = UserPreferences.liurenUIScale
                     liurenhighScale = liurenHighScale
-                    if (currentPlatform.equals(PlatformType.ANDROID)) {
-                        useDynamicColor = UserPreferences.useDynamicColor
-                    } else { UserPreferences.useDynamicColor = false ; useDynamicColor = UserPreferences.useDynamicColor }
+                    UserPreferences.useDynamicColor = false
+                    useDynamicColor = UserPreferences.useDynamicColor
                     themeColorInt = UserPreferences.customThemeColor
 
                     themeConfig.refresh()

@@ -486,154 +486,6 @@ fun androidx.compose.foundation.layout.RowScope.GridCellWrapper(
     )
 }
 
-/**
- * 计算宫位关联逻辑 (先天 -> 当前 -> 后天)
- * 逻辑：
- * 1. 找到当前宫位 (Post-Heaven Position)
- * 2. Pre-Heaven: 当前宫位的八卦在先天八卦图中的位置。
- * 3. Post-Heaven (Next): 当前宫位(作为先天位置)对应的卦移动到的后天位置。
- *    (即：Source -> Current -> Displaced)
- */
-fun getRelatedPalaceIndices(currentIndex: Int): Triple<Int, Int, Int> {
-    // 索引映射:
-    // 0=坎, 1=坤, 2=震, 3=巽, 4=中, 5=乾, 6=兑, 7=艮, 8=离
-    return when (currentIndex) {
-        0 -> Triple(6, 0, 1) // 坎(0)来自西(6), 坎(先天)变为坤(1)
-        1 -> Triple(0, 1, 3) // 坤(1)来自北(0), 坤(先天)变为巽(3)
-        2 -> Triple(7, 2, 8) // 震(2)来自东北(7), 震(先天)变为离(8)
-        3 -> Triple(1, 3, 6) // 巽(3)来自西南(1), 巽(先天)变为兑(6)
-        4 -> Triple(4, 4, 4) // 中宫
-        5 -> Triple(8, 5, 7) // 乾(5)来自南(8), 乾(先天)变为艮(7)
-        6 -> Triple(3, 6, 0) // 兑(6)来自东南(3), 兑(先天)变为坎(0)
-        7 -> Triple(5, 7, 2) // 艮(7)来自西北(5), 艮(先天)变为震(2)
-        8 -> Triple(2, 8, 5) // 离(8)来自东(2), 离(先天)变为乾(5)
-        else -> Triple(currentIndex, currentIndex, currentIndex)
-    }
-}
-
-/**
- * 奇门遁甲信息面板
- */
-@Composable
-fun QiMenInfoPanel(data: QiMenData, onNewClick: () -> Unit) {
-    // 1. 卡片整体可点击
-    Card(
-        onClick = onNewClick, // 点击整个卡片触发新建/弹窗
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            // --- 第一部分：时间信息 ---
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = data.timeString,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = data.juShu,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                Text(
-                    text = "${data.lunarDate}  ${data.solarTerm}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-            // --- 第二部分：四柱干支 ---
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    PillarItem(label = "年柱", value = data.yearPillar)
-                    PillarItem(label = "月柱", value = data.monthPillar)
-                    PillarItem(label = "日柱", value = data.dayPillar)
-                    PillarItem(label = "时柱", value = data.hourPillar)
-                }
-            }
-
-            // --- 第三部分：核心参数 ---
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // 第一行：值符、值使
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    BigInfoItem(label = "值符星", value = data.valueStar, modifier = Modifier.weight(1f))
-                    VerticalDivider(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .align(Alignment.CenterVertically),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    BigInfoItem(label = "值使门", value = data.valueDoor, modifier = Modifier.weight(1f))
-                }
-
-                // 第二行：月将、月令
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    BigInfoItem(label = "月将", value = data.monthGeneral, modifier = Modifier.weight(1f))
-                    VerticalDivider(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .align(Alignment.CenterVertically),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    BigInfoItem(label = "月令", value = data.monthCommand, modifier = Modifier.weight(1f))
-                }
-            }
-
-            // --- 第四部分：提示 ---
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "直接点击此卡片以新建排盘\n点击宫位查看先天流转\n长按或Shift/Ctrl+点击操作宫位",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
 
 /**
  * 单个宫位单元格
@@ -787,3 +639,154 @@ fun QiMenCell(
         }
     }
 }
+
+
+/**
+ * 计算宫位关联逻辑 (先天 -> 当前 -> 后天)
+ * 逻辑：
+ * 1. 找到当前宫位 (Post-Heaven Position)
+ * 2. Pre-Heaven: 当前宫位的八卦在先天八卦图中的位置。
+ * 3. Post-Heaven (Next): 当前宫位(作为先天位置)对应的卦移动到的后天位置。
+ *    (即：Source -> Current -> Displaced)
+ */
+fun getRelatedPalaceIndices(currentIndex: Int): Triple<Int, Int, Int> {
+    // 索引映射:
+    // 0=坎, 1=坤, 2=震, 3=巽, 4=中, 5=乾, 6=兑, 7=艮, 8=离
+    return when (currentIndex) {
+        0 -> Triple(6, 0, 1) // 坎(0)来自西(6), 坎(先天)变为坤(1)
+        1 -> Triple(0, 1, 3) // 坤(1)来自北(0), 坤(先天)变为巽(3)
+        2 -> Triple(7, 2, 8) // 震(2)来自东北(7), 震(先天)变为离(8)
+        3 -> Triple(1, 3, 6) // 巽(3)来自西南(1), 巽(先天)变为兑(6)
+        4 -> Triple(4, 4, 4) // 中宫
+        5 -> Triple(8, 5, 7) // 乾(5)来自南(8), 乾(先天)变为艮(7)
+        6 -> Triple(3, 6, 0) // 兑(6)来自东南(3), 兑(先天)变为坎(0)
+        7 -> Triple(5, 7, 2) // 艮(7)来自西北(5), 艮(先天)变为震(2)
+        8 -> Triple(2, 8, 5) // 离(8)来自东(2), 离(先天)变为乾(5)
+        else -> Triple(currentIndex, currentIndex, currentIndex)
+    }
+}
+
+/**
+ * 奇门遁甲信息面板
+ */
+@Composable
+fun QiMenInfoPanel(data: QiMenData, onNewClick: () -> Unit) {
+    // 1. 卡片整体可点击
+    Card(
+        onClick = onNewClick, // 点击整个卡片触发新建/弹窗
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // --- 第一部分：时间信息 ---
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = data.timeString,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = data.juShu,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Text(
+                    text = "${data.lunarDate}  ${data.solarTerm}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+            // --- 第二部分：四柱干支 ---
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    PillarItem(label = "年柱", value = data.yearPillar)
+                    PillarItem(label = "月柱", value = data.monthPillar)
+                    PillarItem(label = "日柱", value = data.dayPillar)
+                    PillarItem(label = "时柱", value = data.hourPillar)
+                }
+            }
+
+            // --- 第三部分：核心参数 ---
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 第一行：值符、值使
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    BigInfoItem(label = "值符星", value = data.valueStar, modifier = Modifier.weight(1f))
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .align(Alignment.CenterVertically),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    BigInfoItem(label = "值使门", value = data.valueDoor, modifier = Modifier.weight(1f))
+                }
+
+                // 第二行：月将、月令
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    BigInfoItem(label = "月将", value = data.monthGeneral, modifier = Modifier.weight(1f))
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .align(Alignment.CenterVertically),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    BigInfoItem(label = "月令", value = data.monthCommand, modifier = Modifier.weight(1f))
+                }
+            }
+
+            // --- 第四部分：提示 ---
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "直接点击此卡片以新建排盘",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+

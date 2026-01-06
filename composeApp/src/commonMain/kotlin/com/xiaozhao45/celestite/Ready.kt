@@ -371,8 +371,8 @@ private fun TimeDisplayCard(
                 text = timeStr,
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontSize = 68.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.ExtraLight
                 ),
                 color = MaterialTheme.colorScheme.primary
             )

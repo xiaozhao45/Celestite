@@ -18,8 +18,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
               
-      - name: Install WiX
-        run: dotnet tool install --global wix || echo "Wix already installed or handled by Gradle"
+
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -28,14 +27,19 @@ jobs:
         run: ./gradlew :composeApp:packageReleaseExe :composeApp:packageReleaseMsi
         
       - name: Dump jpackage logs
+        if: always()
         shell: pwsh
         run: |
-          Get-ChildItem "composeApp\build\compose\logs\packageReleaseExe" | Format-Table Name,Length
-          "`n--- ERR ---`n"
-          Get-Content "composeApp\build\compose\logs\packageReleaseExe\jpackage-*-err.txt"
-          "`n--- OUT ---`n"
-          Get-Content "composeApp\build\compose\logs\packageReleaseExe\jpackage-*-out.txt"
-      
+          dir composeApp\build\compose\logs\packageReleaseExe -ErrorAction SilentlyContinue
+          Get-Content composeApp\build\compose\logs\packageReleaseExe\jpackage-*-err.txt -ErrorAction SilentlyContinue
+          Get-Content composeApp\build\compose\logs\packageReleaseExe\jpackage-*-out.txt -ErrorAction SilentlyContinue
+          Get-Content composeApp\build\compose\tmp\packageReleaseExe.args.txt -ErrorAction SilentlyContinue
+
+      - name: Dump jpackage error
+        if: failure()
+        run: |
+          type composeApp\build\compose\logs\packageReleaseExe\*-err.txt
+
             
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4

@@ -3,13 +3,13 @@ name: Build and Publish All Platforms
 on:
   push:
     tags:
-      - 'v*' # 仅在推送 v 开头的 tag 时触发
-  workflow_dispatch: # 允许手动触发
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
-  # ==================================================================
-  # 1. Android 构建 (运行在 Linux)
-  # ==================================================================
+  # ================================================================
+  # 1. Android 构建
+  # ================================================================
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +23,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
       - name: Decode Keystore
         env:
@@ -52,9 +55,9 @@ jobs:
             app-release.apk
             app-release.aab
 
-  # ==================================================================
-  # 2. Windows 构建 (EXE, MSI, Portable Zip)
-  # ==================================================================
+  # ================================================================
+  # 2. Windows 构建
+  # ================================================================
   build-windows:
     runs-on: windows-latest
     steps:
@@ -76,7 +79,8 @@ jobs:
         shell: pwsh
         run: |
           $Version = "${{ github.ref_name }}"
-          Compress-Archive -Path composeApp/build/compose/binaries/main/app/* -DestinationPath "windows-portable-$Version.zip"
+          Compress-Archive -Path composeApp/build/compose/binaries/main/app/* `
+            -DestinationPath "windows-portable-$Version.zip"
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -87,9 +91,9 @@ jobs:
             composeApp/build/compose/binaries/main/msi/*.msi
             *.zip
 
-  # ==================================================================
-  # 3. macOS 构建 (DMG, PKG)
-  # ==================================================================
+  # ================================================================
+  # 3. macOS 构建
+  # ================================================================
   build-macos:
     runs-on: macos-latest
     steps:
@@ -104,6 +108,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Build macOS Targets
         run: ./gradlew :composeApp:packageReleaseDmg :composeApp:packageReleasePkg
 
@@ -115,9 +122,9 @@ jobs:
             composeApp/build/compose/binaries/main/dmg/*.dmg
             composeApp/build/compose/binaries/main/pkg/*.pkg
 
-  # ==================================================================
-  # 4. Linux 构建 (Deb, Rpm, AppImage)
-  # ==================================================================
+  # ================================================================
+  # 4. Linux 构建
+  # ================================================================
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -132,13 +139,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Install Linux Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y rpm fakeroot binutils
 
       - name: Build Linux Targets
-        run: ./gradlew :composeApp:packageReleaseDeb :composeApp:packageReleaseRpm :composeApp:packageReleaseAppImage
+        run: ./gradlew \
+          :composeApp:packageReleaseDeb \
+          :composeApp:packageReleaseRpm \
+          :composeApp:packageReleaseAppImage
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -149,9 +162,9 @@ jobs:
             composeApp/build/compose/binaries/main/rpm/*.rpm
             composeApp/build/compose/binaries/main/appImage/*.AppImage
 
-  # ==================================================================
-  # 5. 发布 Release (汇总所有产物)
-  # ==================================================================
+  # ================================================================
+  # 5. 创建 GitHub Release
+  # ================================================================
   release:
     needs: [build-android, build-windows, build-macos, build-linux]
     runs-on: ubuntu-latest
@@ -164,7 +177,7 @@ jobs:
           path: ./artifacts
           merge-multiple: true
 
-      - name: List Files (Debug)
+      - name: List Files
         run: ls -R ./artifacts
 
       - name: Create GitHub Release

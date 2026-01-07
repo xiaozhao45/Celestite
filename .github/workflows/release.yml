@@ -74,14 +74,17 @@ jobs:
 
       - name: Build Windows Targets
         run: ./gradlew :composeApp:packageReleaseExe :composeApp:packageReleaseMsi
-        
+              
+      - name: Install WiX
+        run: dotnet tool install --global wix || echo "Wix already installed or handled by Gradle"
+      
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: |
-            composeApp/build/compose/binaries/main/exe/*.exe
-            composeApp/build/compose/binaries/main/msi/*.msi
+            composeApp/build/compose/binaries/main-release/exe/*.exe
+            composeApp/build/compose/binaries/main-release/msi/*.msi
 
   # ================================================================
   # 3. macOS 构建
@@ -111,7 +114,7 @@ jobs:
         with:
           name: macos-artifacts
           path: |
-            composeApp/build/compose/binaries/main/dmg/*.dmg
+            composeApp/build/compose/binaries/main-release/dmg/*.dmg
 
   # ================================================================
   # 4. Linux 构建

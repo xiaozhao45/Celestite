@@ -22,11 +22,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # === 修正：移除了 ${{ }} ===
       - name: Decode Keystore
-        if: secrets.ANDROID_KEYSTORE_BASE64 != ''
+        if: secrets.ANDROID_KEYSTORE_BASE64 != '' # <-- 移除 ${{ }}
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > ./release.keystore
-
+        
       - name: Build Android
         run: ./gradlew :composeApp:assembleRelease :composeApp:bundleRelease
         env:

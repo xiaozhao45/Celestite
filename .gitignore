@@ -3,7 +3,6 @@
 .gradle
 **/build/
 xcuserdata
-!src/**/build/
 local.properties
 .idea
 .DS_Store
@@ -17,3 +16,5 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+*.jks
+**/*.jks

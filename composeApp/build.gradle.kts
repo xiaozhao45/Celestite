@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
+import java.util.Properties
+import java.io.FileInputStream
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -77,6 +78,11 @@ kotlin {
         }
     }
 }
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
 
 android {
     namespace = "com.xiaozhao45.celestite"
@@ -105,15 +111,44 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // 1. 尝试从 local.properties 读取 (本地优先)
+            val localKeystore = localProperties.getProperty("RELEASE_STORE_FILE")
+
+            // 2. 尝试从环境变量读取 (GitHub Actions / CI)
+            val envKeystore = System.getenv("SIGNING_STORE_FILE")
+
+            if (!localKeystore.isNullOrEmpty()) {
+                storeFile = file(localKeystore)
+                storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            } else if (!envKeystore.isNullOrEmpty()) {
+                storeFile = file(envKeystore)
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            } else {
+                // 没有找到 Release 密钥，暂时不配置 storeFile，稍后在 buildTypes 里回退到 debug
+                println("Note: No release keystore found in local.properties or environment variables.")
+            }
+        }
+    }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
-//            isShrinkResources = true // 移除无用的资源文件（需配合混淆使用）
-//            proguardFiles(
-//                getDefaultProguardFile("proguard-android-optimize.txt"),
-//                "proguard-rules.pro"
-//            )
+
+            val releaseConfig = signingConfigs.getByName("release")
+            // 检查 Release 配置是否有效 (storeFile 是否存在)
+            if (releaseConfig.storeFile != null && releaseConfig.storeFile?.exists() == true) {
+                signingConfig = releaseConfig
+            } else {
+                // 3. 回退策略：如果没有 Release 密钥，使用 Debug 签名
+                println("Warning: Using DEBUG signature for release build.")
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 
@@ -126,7 +161,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
-
 // 必须在根级别添加脱糖依赖库
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")

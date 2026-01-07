@@ -1,4 +1,4 @@
-name: Build and Publish All Platforms
+name: Build and All Platforms
 
 on:
   push:
@@ -44,8 +44,8 @@ jobs:
 
       - name: Rename Android Artifacts
         run: |
-          mv composeApp/build/outputs/apk/release/composeApp-release.apk app-release.apk
-          mv composeApp/build/outputs/bundle/release/composeApp-release.aab app-release.aab
+          mv -f composeApp/build/outputs/apk/release/*.apk app-release.apk
+          mv -f composeApp/build/outputs/bundle/release/*.aab app-release.aab
 
       - name: Upload Android Artifacts
         uses: actions/upload-artifact@v4
@@ -73,15 +73,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build Windows Targets
-        run: ./gradlew :composeApp:packageReleaseExe :composeApp:packageReleaseMsi :composeApp:createReleaseDistributable
-
-      - name: Create Portable Zip
-        shell: pwsh
-        run: |
-          $Version = "${{ github.ref_name }}"
-          Compress-Archive -Path composeApp/build/compose/binaries/main/app/* `
-            -DestinationPath "windows-portable-$Version.zip"
-
+        run: ./gradlew :composeApp:packageReleaseExe :composeApp:packageReleaseMsi
+        
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -89,7 +82,6 @@ jobs:
           path: |
             composeApp/build/compose/binaries/main/exe/*.exe
             composeApp/build/compose/binaries/main/msi/*.msi
-            *.zip
 
   # ================================================================
   # 3. macOS 构建
@@ -112,7 +104,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build macOS Targets
-        run: ./gradlew :composeApp:packageReleaseDmg :composeApp:packageReleasePkg
+        run: ./gradlew :composeApp:packageReleaseDmg
 
       - name: Upload macOS Artifacts
         uses: actions/upload-artifact@v4
@@ -120,7 +112,6 @@ jobs:
           name: macos-artifacts
           path: |
             composeApp/build/compose/binaries/main/dmg/*.dmg
-            composeApp/build/compose/binaries/main/pkg/*.pkg
 
   # ================================================================
   # 4. Linux 构建
@@ -156,7 +147,7 @@ jobs:
         with:
           name: linux-artifacts
           path: |
-            composeApp/build/compose/binaries/main/deb/*.deb
-            composeApp/build/compose/binaries/main/rpm/*.rpm
-            composeApp/build/compose/binaries/main/appImage/*.AppImage
+            composeApp/build/compose/binaries/main-release/deb/*.deb
+            composeApp/build/compose/binaries/main-release/rpm/*.rpm
+            composeApp/build/compose/binaries/main-release/appImage/*.AppImage
 

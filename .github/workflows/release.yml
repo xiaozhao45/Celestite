@@ -69,14 +69,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+              
+      - name: Install WiX
+        run: dotnet tool install --global wix || echo "Wix already installed or handled by Gradle"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build Windows Targets
         run: ./gradlew :composeApp:packageReleaseExe :composeApp:packageReleaseMsi
-              
-      - name: Install WiX
-        run: dotnet tool install --global wix || echo "Wix already installed or handled by Gradle"
+
       
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4

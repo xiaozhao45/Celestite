@@ -35,7 +35,11 @@ jobs:
           Get-Content composeApp\build\compose\logs\packageReleaseExe\jpackage-*-out.txt -ErrorAction SilentlyContinue
           Get-Content composeApp\build\compose\tmp\packageReleaseExe.args.txt -ErrorAction SilentlyContinue
 
-      
+      - name: Dump jpackage error
+        if: failure()
+        run: |
+          type composeApp\build\compose\logs\packageReleaseExe\*-err.txt
+
             
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4

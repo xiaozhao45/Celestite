@@ -18,12 +18,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
               
-      - name: Install WiX Toolset v3
-        shell: pwsh
-        run: |
-          choco install wixtoolset --version=3.11.2 -y --no-progress
-          candle.exe -? | Select-Object -First 1
-          light.exe -? | Select-Object -First 1
 
 
       - name: Setup Gradle
